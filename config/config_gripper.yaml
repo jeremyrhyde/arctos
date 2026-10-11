@@ -1,0 +1,41 @@
+# Gripper node configuration: the single source of truth for its pins, IDs and limits.
+#
+# Every build regenerates lib/arctos_board/gripper_config.h from this file
+# (scripts/gen_config.py). Edit here, never in the generated header.
+#
+# Naming: each value becomes a C++ constant named GRIPPER_<SECTION>_<KEY>,
+#   servo.angle_closed       -> GRIPPER_SERVO_ANGLE_CLOSED
+#   boards.nano.pins.servo   -> GRIPPER_PIN_SERVO  (only when building for that board)
+# Set a value to null if it's not known yet. It's left out of the header, and the header notes it as unset.
+
+can:
+  id: 0x07
+  bitrate: null        # open question: must match the MKS drivers and the USB-CAN adapter (500000 is typical)
+
+servo:
+  model: DS3230MG
+  supply_volts: 6.0
+  # Working jaw limits, in servo degrees. The hard stops measured on 2026-10-11
+  # (with the pulse range below) are 60 closed and 120 open; these keep 5 deg of
+  # margin from each. Never command past the hard stops: the servo stalls.
+  angle_closed: 65
+  angle_open: 115
+  angle_home: 90       # angle the servo goes to at power-up
+  # Pulse width for 0 and 180 degrees. If you change these, the angles above
+  # no longer point to the same jaw positions, so re-measure the limits.
+  pulse_min_us: 544
+  pulse_max_us: 2400
+
+boards:
+  nano:                # Arduino Nano + MCP2515 (current)
+    pins:
+      servo: 9
+      mcp2515_cs: 10
+      mcp2515_int: 2   # SPI is fixed: D11 MOSI, D12 MISO, D13 SCK
+    mcp2515_crystal_mhz: null   # open question: read the crystal on the module (8 or 16)
+
+  esp32:               # ESP32-WROOM-32U + SN65HVD230 (planned)
+    pins:
+      servo: 18
+      twai_tx: 5
+      twai_rx: 4
