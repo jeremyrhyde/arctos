@@ -1,0 +1,8 @@
+# CAN bus shared by every node: the joint drivers, the gripper node and the PC adapter.
+# Generates lib/arctos_board/can_config.h (CAN_BITRATE). See config_gripper.yaml for the format.
+
+bitrate: 500000        # MKS factory default; every driver's CanRate menu, the adapter and the gripper must match
+
+host:                  # PC side only (not put in the generated header)
+  interface: slcan     # CANable 2.0 with slcan firmware (normaldotcom/canable2)
+  channel: auto        # auto = the first /dev/cu.usbmodem*; or give the full path

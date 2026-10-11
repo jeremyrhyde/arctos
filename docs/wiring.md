@@ -9,6 +9,7 @@ Handoff notes for writing firmware. Hardware is wired per the official Arctos Ci
   - X (base), Y (shoulder), Z (elbow): CAN IDs 0x01, 0x02, 0x03
   - A (forearm roll): 0x04
   - B, C (differential wrist): 0x05, 0x06. These are MKS SERVO42D on NEMA 17.
+    - On this arm the **left** wrist motor is B (0x05) and the **right** is C (0x06), and each is labelled with its ID.
 - **Gripper:** its own CAN node, **ID 0x07**. An Arduino Nano with an MCP2515 module drives a hobby servo.
 - **Host:** PC (macOS) connects to the bus through a USB-CAN adapter.
 
@@ -58,7 +59,7 @@ Motor direction (the MKS `Dir` setting) must be set so equal positive moves on B
 - Topology: a single daisy-chained bus.
   - USB-CAN adapter ↔ joint drivers X…C ↔ gripper MCP2515
 - **Termination is at the two physical ends only:**
-  - USB-CAN adapter: "120R" jumper on.
+  - USB-CAN adapter: "120R" jumper on. On this adapter (CANable 2.0, slcan firmware) the 120R header has no pins fitted. If CANH–CANL reads ~120 Ω, add a 120 Ω resistor across CANH/CANL at its terminal.
   - MCP2515: **J1 jumper on**.
   - **No termination on any MKS driver,** including joint C.
 - Check: with power off, CANH–CANL should read about 60 Ω.
@@ -91,8 +92,8 @@ Requirements:
 
 ### Open questions to resolve before or while coding
 
-1. Is the MCP2515 crystal 8 MHz or 16 MHz?
-2. What is the CAN bitrate configured on the MKS drivers and the adapter?
+1. ~~Is the MCP2515 crystal 8 MHz or 16 MHz?~~ 8 MHz (found by `tests/can_link`, 2026-10-11).
+2. What is the CAN bitrate configured on the MKS drivers and the adapter? The adapter ↔ MCP2515 link works at 500 kbit/s (`config/config_can.yaml`). The MKS drivers still need to be set to 500K in their menus.
 3. What payload format does the Arctos software send to ID 0x07?
 4. ~~What are the measured open and closed servo angles?~~ Hard stops at 60° closed and 120° open; working range 65–115°.
 5. Is D9 the servo pin, or does the reference sketch use another?

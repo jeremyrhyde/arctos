@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 constexpr uint32_t GRIPPER_CAN_ID = 0x07;
-// GRIPPER_CAN_BITRATE: unset (null in config)
 constexpr char GRIPPER_SERVO_MODEL[] = "DS3230MG";
 constexpr float GRIPPER_SERVO_SUPPLY_VOLTS = 6.0f;
 constexpr long GRIPPER_SERVO_ANGLE_CLOSED = 65;
@@ -18,7 +17,7 @@ constexpr long GRIPPER_SERVO_PULSE_MAX_US = 2400;
 constexpr uint8_t GRIPPER_PIN_SERVO = 9;
 constexpr uint8_t GRIPPER_PIN_MCP2515_CS = 10;
 constexpr uint8_t GRIPPER_PIN_MCP2515_INT = 2;
-// GRIPPER_MCP2515_CRYSTAL_MHZ: unset (null in config)
+constexpr long GRIPPER_MCP2515_CRYSTAL_MHZ = 8;
 #elif defined(ARDUINO_ARCH_ESP32)  // esp32
 constexpr uint8_t GRIPPER_PIN_SERVO = 18;
 constexpr uint8_t GRIPPER_PIN_TWAI_TX = 5;

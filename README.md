@@ -9,11 +9,14 @@ Component bring-up tests for an Arctos 6-axis arm (CAN-bus closed-loop build):
 ## Layout
 
 ```
+config/config_*.yaml           pins, CAN IDs, limits: the one place to change them
 docs/wiring.md                 wiring, power, CAN termination, open questions, status
 artifact/images/               official Arctos closed-loop wiring diagram
-lib/arctos_board/              pin maps per board + CAN IDs (shared by all firmware)
+lib/arctos_board/              board selection + headers generated from config/ (firmware)
+host/arctos_host/              Python CAN bus + MKS driver protocol (PC-side tests)
+scripts/gen_config.py          YAML -> C++ header generator, runs before every build
 tests/                         one folder per component test, see tests/README.md
-platformio.ini                 one build env per test per board
+platformio.ini                 one build env per firmware test per board
 ```
 
 ## Setup
@@ -22,6 +25,12 @@ Install PlatformIO, either the VS Code extension or the CLI:
 
 ```sh
 brew install platformio      # or: pipx install platformio
+```
+
+For the PC-side tests that talk to the MKS drivers over the USB-CAN adapter, run this once:
+
+```sh
+python3 -m venv .venv && .venv/bin/pip install -r host/requirements.txt
 ```
 
 ## Running a test
@@ -37,4 +46,5 @@ To target the ESP32 later, use the `_esp32` env of the same test. The pin map sw
 
 ## Start here
 
-1. [`tests/gripper_servo/`](tests/gripper_servo/README.md): the gripper servo sweep and jaw limits
+1. [`tests/gripper_servo/`](tests/gripper_servo/README.md): the gripper servo sweep and jaw limits (passed)
+2. [`tests/joint_bc/`](tests/joint_bc/README.md): wrist B/C drivers, motors, hall sensors and differential

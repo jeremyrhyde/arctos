@@ -10,6 +10,7 @@ Mapping, using node "gripper":
   boards.<board>.pins.<key>  ->  GRIPPER_PIN_KEY  (inside #if for that board)
   boards.<board>.<key>       ->  GRIPPER_KEY      (inside #if for that board)
   null                       ->  left out, listed as unset
+  host: ...                  ->  skipped (settings only the PC-side tools use)
 """
 
 import os
@@ -74,6 +75,7 @@ def render(node, config, source):
         "",
     ]
 
+    config.pop("host", None)
     boards = config.pop("boards", {}) or {}
     for name, value in flatten(prefix, config):
         lines.append(cpp_constant(name, value))

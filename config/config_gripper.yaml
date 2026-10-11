@@ -9,8 +9,7 @@
 # Set a value to null if it's not known yet. It's left out of the header, and the header notes it as unset.
 
 can:
-  id: 0x07
-  bitrate: null        # open question: must match the MKS drivers and the USB-CAN adapter (500000 is typical)
+  id: 0x07             # bitrate: see config_can.yaml
 
 servo:
   model: DS3230MG
@@ -32,7 +31,7 @@ boards:
       servo: 9
       mcp2515_cs: 10
       mcp2515_int: 2   # SPI is fixed: D11 MOSI, D12 MISO, D13 SCK
-    mcp2515_crystal_mhz: null   # open question: read the crystal on the module (8 or 16)
+    mcp2515_crystal_mhz: 8      # found by tests/can_link 2026-10-11 (0 = try 8 and 16 at startup)
 
   esp32:               # ESP32-WROOM-32U + SN65HVD230 (planned)
     pins:

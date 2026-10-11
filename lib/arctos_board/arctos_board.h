@@ -21,12 +21,6 @@
 #error "Unsupported board: add it to arctos_board.h and scripts/gen_config.py"
 #endif
 
+#include "can_config.h"
 #include "gripper_config.h"
-
-// ---- CAN bus: joint drivers (gripper ID is GRIPPER_CAN_ID) ----
-constexpr uint8_t CAN_ID_JOINT_X = 0x01;  // base
-constexpr uint8_t CAN_ID_JOINT_Y = 0x02;  // shoulder
-constexpr uint8_t CAN_ID_JOINT_Z = 0x03;  // elbow
-constexpr uint8_t CAN_ID_JOINT_A = 0x04;  // forearm roll
-constexpr uint8_t CAN_ID_JOINT_B = 0x05;  // differential wrist
-constexpr uint8_t CAN_ID_JOINT_C = 0x06;  // differential wrist
+#include "joints_config.h"

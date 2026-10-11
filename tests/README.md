@@ -5,25 +5,26 @@ Bring up the arm one component at a time, starting with the simplest and leaving
 | # | Test | Folder | Board | Status |
 |---|---|---|---|---|
 | 1 | Gripper servo: sweep and jaw limits | [`gripper_servo/`](gripper_servo/) | Nano | Passed 2026-10-11 (working range 65–115°) |
-| 2 | CAN bus: termination (~60 Ω), USB-CAN adapter sees traffic | — | Host | Planned |
+| 2 | CAN link: adapter ↔ Nano/MCP2515 both ways, find crystal | [`can_link/`](can_link/) | Nano + host | Passed 2026-10-11 (8 MHz crystal) |
 | 3 | Gripper CAN node: servo commanded over CAN ID 0x07 | — | Nano | Planned (needs #1 and #2) |
-| 4 | MKS drivers: config (`SR_vFOC`, ID, bitrate, current, direction) and moves, one joint at a time | — | Host | Planned |
-| 5 | B/C differential: equal moves give pure pitch | — | Host | Planned (needs #4) |
+| 4 | Wrist B/C: driver comms, motor moves, hall sensors, differential | [`joint_bc/`](joint_bc/) | Host | Stages 1–2 passed 2026-10-11; remap done; Stage 3 (sensors) waiting on sensor wiring |
+| 5 | MKS drivers X, Y, Z, A: config and moves, one joint at a time | — | Host | Planned |
 | 6 | Gripper node on ESP32 (TWAI + SN65HVD230) | reuse #1 and #3 | ESP32 | Waiting on parts |
 
 ## Adding a test
 
 1. Create `tests/<name>/`, containing:
    - a `README.md` that copies the layout of `gripper_servo/README.md` (purpose, wiring, safety, stages, pass criteria, results)
-   - the firmware source, if any (`.cpp` that includes `<Arduino.h>` and `<arctos_board.h>`)
-2. Add one PlatformIO env for each board it runs on:
+   - the firmware source, if any (`.cpp` that includes `<Arduino.h>` and `<arctos_board.h>`), **or**
+   - a host script, for tests that talk to the drivers from the PC (see `joint_bc/bc_test.py`). It uses `host/arctos_host/` for the CAN bus and the MKS protocol.
+2. Firmware tests only: add one PlatformIO env for each board it runs on:
    ```ini
    [env:<name>_nano]
    extends = nano
    build_src_filter = +<<name>/>
    lib_deps = ...
    ```
-3. Use only the pin and ID constants from `lib/arctos_board/arctos_board.h`, never hard-coded numbers. That way the ESP32 swap only touches the header.
+3. Take pins, IDs and limits from `config/config_*.yaml`, never from hard-coded numbers.
+   - Firmware reads them through the generated headers included by `arctos_board.h`.
+   - Host scripts read them through `arctos_host.config.load()`.
 4. Add the test to the table above.
-
-Host-side tests, such as those that talk to the MKS drivers through the USB-CAN adapter, will go in a `host/` folder once we write the first one.

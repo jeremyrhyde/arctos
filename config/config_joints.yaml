@@ -1,0 +1,48 @@
+# MKS closed-loop joint drivers on the CAN bus.
+# Generates lib/arctos_board/joints_config.h (e.g. b.can_id -> JOINTS_B_CAN_ID).
+# See config_gripper.yaml for the format. `host:` sections are for the PC-side test tools only.
+#
+# Each driver ships as CAN ID 01; set CanID, CanRate and Mode in the driver's own menu.
+
+x: {can_id: 0x01, name: base}
+y: {can_id: 0x02, name: shoulder}
+z: {can_id: 0x03, name: elbow}
+a: {can_id: 0x04, name: forearm roll}
+
+b:
+  can_id: 0x05
+  name: wrist B (differential)
+  location: left motor   # the motor labelled 0x05 on this arm (noted 2026-10-11)
+  driver: MKS SERVO42D
+  gear_ratio: 67.82    # motor turns per output turn (Arctos docs; not yet measured)
+  menu:                # what to set in the driver's menu (the tool can't read these back)
+    mode: SR_vFOC
+    can_rate: 500K
+    current_ma: 1600   # factory default
+    microsteps: 16     # factory default
+  sensors:             # KY-003 hall modules; read as En/Dir after the limit-pin remap (0x9E)
+    en: top hall (home)
+    dir: bottom hall (end limit)
+
+c:
+  can_id: 0x06
+  name: wrist C (differential)
+  location: right motor  # the motor labelled 0x06 on this arm (noted 2026-10-11)
+  driver: MKS SERVO42D
+  gear_ratio: 67.82
+  menu:
+    mode: SR_vFOC
+    can_rate: 500K
+    current_ma: 1600
+    microsteps: 16
+  sensors:             # WSH231 dual hall board
+    en: north pole (home)
+    dir: south pole (end limit)
+
+host:
+  test:
+    speed_rpm: 30        # motor shaft speed for test moves
+    acc: 2               # MKS ramp setting 0..255 (Arctos uses 2; 0 = no ramp)
+    max_move_deg: 720    # largest single test move, in motor shaft degrees
+    seek_speed_rpm: 20   # speed when driving toward a sensor
+    max_seek_deg: 3600   # furthest a seek may travel, in motor shaft degrees (10 turns)
