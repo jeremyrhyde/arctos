@@ -30,7 +30,7 @@ All commands below are run from the repo root, and are written as `bc <command>`
 
 - The 24 V switch powers every joint. Before each power-on, put the arm in a stable resting pose.
 - **Ctrl-C during any move sends an emergency stop to both motors.** `bc stop` does the same from a second terminal.
-- Test moves are capped at `max_move_deg` (720 motor degrees, which is about 10° at the joint). Seeks are capped at `max_seek_deg`. Both are set in `config_joints.yaml`.
+- Test moves are capped at `max_move_deg` (1800 motor degrees, which is about 27° at the joint by the 67.82 ratio). Seeks are capped at `max_seek_deg`. Both are set in `config_joints.yaml`.
 - Stages 1–3 are meant to be run with the **belt off or loose**, so the motors spin freely and can't drive the wrist into anything.
 
 ## Stage 0: bus and driver setup (24 V off unless noted)
@@ -148,4 +148,9 @@ Then, with the belt on, run `seek` toward each real sensor. Use small numbers fi
 | 2026-10-11 | 1 comms | PASS: 0x05 answers, stopped | PASS: 0x06 answers, stopped | Driver menus: SR_vFOC, 500K, MStep 16. Bus: adapter, B, C, MCP2515 (J1). |
 | 2026-10-11 | 2 moves (`+` direction, error) | PASS: + = CW from shaft end; 90°: 0.9, 1.3; 180°: 0.3; 360°: 0.8° | PASS: + = CW; 90°: 1.1, 1.3; 360°: 0.4° | Encoder counts CCW positive, so the tool flips the sign. One C 360° move hit the 5 s timeout with no "complete" reply (C had moved ~364°); a repeat with logging was clean (complete at 2.06 s). |
 | | 3 sensors (idle/triggered for en, dir) | | | |
+| 2026-10-16 | 4 differential, both belts on (`diff same`) | +360 at 100 rpm: +0.53; +1000 no stops: +0.46 | +360: +0.37; +1000: +1.16 | Wrist moved cleanly (confirmed by the user). C started parked on its IN_1 switch at −2340 and `same +` drove it off. Still to record: whether `same` is pitch or roll. |
+| 2026-10-16 | 4 differential, both belts on (`diff opposite`) | +1000 no stops, 100 rpm: +0.66 | −1000: −0.81 | Clean, with no limit hit. Still to record: which motion `opposite` gives. |
+| 2026-10-16 | 4 repeat: `same` +1000, then `opposite` +1000 (100 rpm, no stops) | same: +0.20; opposite: −0.64 | same: +0.79; opposite: −0.68 | Both clean, with no limit hits. B is now +4360 and C −1980 at the motor. |
+| 2026-10-16 | 4: `opposite` −2000 (100 rpm, no stops) | −1999.2 (+0.84) | +2002.1 (+2.08) | Reversed the opposite axis back to where it started. Clean, with no limit hits. C's 2.08 error is high. B now +2361, C +20 at the motor. |
+| 2026-10-16 | 4: `same` −2000 (100 rpm, no stops) | −2000.9 (−0.94) | −2000.8 (−0.81) | Clean, with no limit hits. Wrist is back to just after the first `same +360`: B +360, C −1980 at the motor. |
 | | 4 differential (same = ?, opposite = ?) | | | |

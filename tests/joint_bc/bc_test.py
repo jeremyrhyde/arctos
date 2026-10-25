@@ -14,7 +14,8 @@ Commands:
     stop                    emergency-stop both motors
     off                     disable both motors (shafts turn freely)
 
-Ctrl-C during any move emergency-stops both motors.
+Ctrl-C during any move emergency-stops both motors. move and diff also e-stop both if a
+limit switch becomes triggered. Options: --speed <rpm>, --no-cap (lift max_move_deg).
 """
 
 import argparse
@@ -25,6 +26,7 @@ import time
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "host"))
 
 from arctos_host import config  # noqa: E402
+from arctos_host.limits import LimitGuard, bit_names  # noqa: E402
 from arctos_host.mks import (  # noqa: E402
     MOTOR_STATUS, MOVE_LIMIT_STOP, Inbox, MksDriver, MksError,
     counts_to_deg, deg_to_counts, move_time_estimate,
@@ -105,18 +107,39 @@ def cmd_ping(inbox, args):
         print("  Missing driver? Run `scan` to see which IDs answer.")
 
 
-def run_moves(drivers, moves):
-    """Start every (driver, key, deg) move together, wait for all, then report."""
+def run_moves(drivers, moves, speed):
+    """Start every (driver, key, deg) move together, wait for all, then report.
+
+    While waiting, polls each driver's limit inputs and e-stops everything if a switch
+    becomes triggered (a switch already triggered at the start is ignored until it releases)."""
+    guards = {d.name: LimitGuard(d, TEST["sensor_triggered_level"]) for d, _, _ in moves}
+    for d, key, _ in moves:
+        print(f"  {key}: {guards[d.name].describe()}")
     for d, _, _ in moves:
         d.enable()
     before = {d.name: d.read_encoder() for d, _, _ in moves}
+    pending = {d.name for d, _, _ in moves}
+    deadline = time.monotonic() + max(move_time_estimate(deg_to_counts(deg), speed) for _, _, deg in moves)
     try:
         for d, _, deg in moves:
-            d.start_relative_move(deg_to_counts(deg), TEST["speed_rpm"], TEST["acc"])
-        for d, _, deg in moves:
-            result = d.wait_move_done(move_time_estimate(deg_to_counts(deg), TEST["speed_rpm"]))
-            if result == MOVE_LIMIT_STOP:
-                print(f"  {d.name}: stopped early by an end-limit sensor")
+            d.start_relative_move(deg_to_counts(deg), speed, TEST["acc"])
+        while pending:
+            if time.monotonic() > deadline:
+                raise MksError(f"{', '.join(sorted(pending))}: move did not finish in time")
+            for d, key, _ in moves:
+                hit = guards[d.name].check()
+                if hit:
+                    estop_all(drivers)
+                    print(f"  {key}: LIMIT {bit_names(hit)} triggered; emergency stop sent to all")
+                    pending.clear()
+                    break
+                if d.name in pending:
+                    reply = d.receive(0xF4, timeout=0)
+                    if reply is not None:
+                        pending.discard(d.name)
+                        if reply[0] == MOVE_LIMIT_STOP:
+                            print(f"  {key}: stopped early by an end-limit sensor")
+            time.sleep(0.01)
     except KeyboardInterrupt:
         estop_all(drivers)
         raise SystemExit("\n  Ctrl-C: emergency stop sent")
@@ -133,16 +156,19 @@ def run_moves(drivers, moves):
 
 
 def cmd_move(inbox, args):
-    check_move_size(args.deg, TEST["max_move_deg"])
+    if not args.no_cap:
+        check_move_size(args.deg, TEST["max_move_deg"])
     d = make_driver(inbox, args.joint)
-    run_moves([d], [(d, args.joint.upper(), args.deg)])
+    run_moves([d], [(d, args.joint.upper(), args.deg)], args.speed)
 
 
 def cmd_diff(inbox, args):
-    check_move_size(args.deg, TEST["max_move_deg"])
+    if not args.no_cap:
+        check_move_size(args.deg, TEST["max_move_deg"])
     b, c = make_driver(inbox, "B"), make_driver(inbox, "C")
     c_deg = args.deg if args.mode == "same" else -args.deg
-    run_moves([b, c], [(b, "B", args.deg), (c, "C", c_deg)])
+    print(f"  B {args.deg:+.1f}, C {c_deg:+.1f} deg motor at {args.speed} rpm")
+    run_moves([b, c], [(b, "B", args.deg), (c, "C", c_deg)], args.speed)
 
 
 def cmd_io(inbox, args):
@@ -225,6 +251,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--channel", help="adapter port (default: from config_can.yaml)")
     parser.add_argument("--release", action="store_true", help="clear stall protection on B and C first")
+    parser.add_argument("--speed", type=int, default=TEST["speed_rpm"], help="move/diff speed in rpm (default: %(default)s)")
+    parser.add_argument("--no-cap", action="store_true", help="move/diff: allow more than max_move_deg (you are watching the arm)")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("scan")
     sub.add_parser("ping")

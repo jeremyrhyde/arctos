@@ -43,6 +43,9 @@ host:
   test:
     speed_rpm: 30        # motor shaft speed for test moves
     acc: 2               # MKS ramp setting 0..255 (Arctos uses 2; 0 = no ramp)
-    max_move_deg: 720    # largest single test move, in motor shaft degrees
+    max_move_deg: 1800   # largest single test move, in motor shaft degrees (5 turns; raised from 720 on 2026-10-17)
+    sweep_step_deg: 360  # joint_move test: stop and read back after at most this many degrees
+    max_sweep_deg: 3600  # joint_move test: largest total forward amount (10 turns)
+    sensor_triggered_level: 0  # input bit level when a limit switch is triggered (the hall modules pull low)
     seek_speed_rpm: 20   # speed when driving toward a sensor
     max_seek_deg: 3600   # furthest a seek may travel, in motor shaft degrees (10 turns)

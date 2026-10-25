@@ -8,7 +8,7 @@ Bring up the arm one component at a time, starting with the simplest and leaving
 | 2 | CAN link: adapter ↔ Nano/MCP2515 both ways, find crystal | [`can_link/`](can_link/) | Nano + host | Passed 2026-10-11 (8 MHz crystal) |
 | 3 | Gripper CAN node: servo commanded over CAN ID 0x07 | — | Nano | Planned (needs #1 and #2) |
 | 4 | Wrist B/C: driver comms, motor moves, hall sensors, differential | [`joint_bc/`](joint_bc/) | Host | Stages 1–2 passed 2026-10-11; remap done; Stage 3 (sensors) waiting on sensor wiring |
-| 5 | MKS drivers X, Y, Z, A: config and moves, one joint at a time | — | Host | Planned |
+| 5 | MKS drivers X, Y, Z, A: config and moves, one joint at a time | [`joint_move/`](joint_move/) | Host | Move accuracy tool ready; Y (0x02) answers, +100° move error −0.09° (2026-10-14) |
 | 6 | Gripper node on ESP32 (TWAI + SN65HVD230) | reuse #1 and #3 | ESP32 | Waiting on parts |
 
 ## Adding a test
